@@ -4,8 +4,8 @@
     "start_url": "/pwa-link/index.html",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ffffff",
-    "ver": "1.0.0",
+    "theme_color": "#CC6CE7",
+    "ver": "1.0.1",
     "icons": [
         {
             "src": "images/icon-192x192.png",
