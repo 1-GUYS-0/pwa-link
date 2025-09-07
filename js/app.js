@@ -22,7 +22,28 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-document.getElementById('update-sw').addEventListener('click', () => {
+// Tạo nút Check for Updates dính vào góc trên bên phải
+const updateBtn = document.createElement('button');
+updateBtn.id = 'update-sw';
+updateBtn.type = 'button';
+updateBtn.textContent = 'Check for Updates';
+updateBtn.style.position = 'fixed';
+updateBtn.style.top = '16px';
+updateBtn.style.right = '16px';
+updateBtn.style.zIndex = '1000';
+updateBtn.style.padding = '10px 18px';
+updateBtn.style.background = '#1976d2';
+updateBtn.style.color = '#fff';
+updateBtn.style.border = 'none';
+updateBtn.style.borderRadius = '8px';
+updateBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.12)';
+updateBtn.style.cursor = 'pointer';
+updateBtn.style.fontSize = '1rem';
+
+document.body.appendChild(updateBtn);
+
+// Gửi tin nhắn đến Service Worker để kiểm tra và cập nhật phiên bản cache 
+updateBtn.addEventListener('click', () => {
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'CHECK_FOR_UPDATE' });
     }

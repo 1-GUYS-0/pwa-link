@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pwa-demo-cache-v1';
+const CACHE_NAME = 'pwa-demo-cache-v3';
 const urlsToCache = [
     './',
     './index.html',
@@ -9,9 +9,12 @@ const urlsToCache = [
     './manifest.json'
 ];
 
-// Sự kiện install: Cache các tài nguyên cơ bản
+// Sự kiện install:
+// - Được kích hoạt khi service worker lần đầu đăng ký hoặc có cập nhật mới.
+// - Dùng để cache các tài nguyên cần thiết cho app hoạt động offline.
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Kích hoạt ngay Service Worker mới
+    console.log('[Service Worker] Install event triggered');
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             console.log('Opened cache');
@@ -20,12 +23,14 @@ self.addEventListener('install', event => {
     );
 });
 
-// Sự kiện fetch: Trả về tài nguyên từ cache hoặc tải từ mạng
+// Sự kiện fetch:
+// - Được kích hoạt mỗi khi trình duyệt yêu cầu tài nguyên (HTML, CSS, JS, ảnh, ...).
+// - Kiểm tra cache trước, nếu có thì trả về cache, nếu không thì tải từ mạng.
 self.addEventListener('fetch', event => {
+    console.log('[Service Worker] Fetch event:', event.request.url);
     event.respondWith(
         caches.match(event.request).then(response => {
             if (response) {
-                // Gửi thông tin cache hit đến UI
                 self.clients.matchAll().then(clients => {
                     clients.forEach(client => {
                         client.postMessage({ type: 'CACHE_HIT', url: event.request.url });
@@ -34,7 +39,6 @@ self.addEventListener('fetch', event => {
                 return response;
             }
             return fetch(event.request).then(networkResponse => {
-                // Gửi thông tin network fetch đến UI
                 self.clients.matchAll().then(clients => {
                     clients.forEach(client => {
                         client.postMessage({ type: 'NETWORK_FETCH', url: event.request.url });
@@ -46,8 +50,12 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// Sự kiện activate: Xóa cache cũ nếu cần thiết
+// Sự kiện activate:
+// - Được kích hoạt sau khi service worker mới được cài đặt thành công.
+// - Dùng để xóa các cache cũ không còn sử dụng, đảm bảo chỉ giữ lại cache mới nhất.
+// - Chuyển quyền kiểm soát cho service worker mới với self.clients.claim().
 self.addEventListener('activate', event => {
+    console.log('[Service Worker] Activate event triggered');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
@@ -59,10 +67,14 @@ self.addEventListener('activate', event => {
             );
         })
     );
-    self.clients.claim(); // Đảm bảo Service Worker kiểm soát tất cả các tab
+    self.clients.claim();
 });
 
+// Sự kiện message:
+// - Được kích hoạt khi nhận được tin nhắn từ client (trang web).
+// - Dùng để kiểm tra và cập nhật phiên bản cache khi có yêu cầu từ client.
 self.addEventListener('message', async event => {
+    console.log('[Service Worker] Message event:', event.data);
     if (event.data && event.data.type === 'CHECK_FOR_UPDATE') {
         const response = await fetch('./manifest.json');
         const newManifest = await response.json();
